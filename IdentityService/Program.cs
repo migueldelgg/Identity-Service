@@ -12,8 +12,6 @@ using IdentityService.Modules.Identity.UseCases.PasswordHashing;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// builder.Services.AddCarter(); // carter exposed the minimal api's present in the project
-
 // 1) Carrega .env da raiz (um nível acima), as variaveis ficam disponiveiss em builder.Configuration
 Env.Load(Path.Combine(builder.Environment.ContentRootPath, "..", ".env"));
 builder.Configuration.AddEnvironmentVariables();

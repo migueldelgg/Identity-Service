@@ -4,7 +4,6 @@ Projeto em desenvolvimento utilizando **.NET 10**.
 
 ```bash
 Packages:
-> Carter                                     10.0.0       10.0.0   
 > DotNetEnv                                  3.1.1        3.1.1    
 > Microsoft.AspNetCore.OpenApi               10.0.3       10.0.3   
 > Microsoft.EntityFrameworkCore.Design       10.0.0       10.0.0   
