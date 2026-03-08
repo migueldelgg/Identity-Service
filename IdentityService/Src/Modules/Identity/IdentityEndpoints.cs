@@ -1,3 +1,6 @@
+using Azure;
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
 using IdentityService.Infrastructure.Database;
 using IdentityService.Infrastructure.Secrets;
 using IdentityService.Modules.Identity.Models;
@@ -95,9 +98,14 @@ internal static class IdentityEndpoints
         return TypedResults.Ok("ok");
     }
 
-    private static Ok<string> ResetPassword()
+    private static async Task<Ok<KeyVaultSecret>> ResetPassword(IConfiguration configuration)
     {
-        return TypedResults.Ok("ok");
+        var secretsClient = new SecretClient(
+            new Uri(configuration["KeyVault:VaultUri"]!),
+            new DefaultAzureCredential());
+
+        Response<KeyVaultSecret> response = await secretsClient.GetSecretAsync("PostgresConnectionString");
+        return TypedResults.Ok(response.Value);
     }
 
     private static Ok<string> NewPassword()
