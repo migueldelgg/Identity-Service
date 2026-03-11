@@ -1,4 +1,4 @@
-namespace IdentityService.Infrastructure.Secrets;
+namespace IdentityService.Infrastructure.Authentication;
 
 public sealed class SecretsSettings
 {
@@ -50,7 +50,8 @@ public sealed class SecretsSettings
             publicKeyPem,
             jwtIssuer,
             jwtAudience,
-            jwtExpiresMinutes);
+            jwtExpiresMinutes
+        );
     }
 
     private static string Require(string? value, string name)

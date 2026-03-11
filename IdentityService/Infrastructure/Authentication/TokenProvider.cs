@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
+using IdentityService.Infrastructure.Configuration.Models;
 using IdentityService.Infrastructure.Database;
 using IdentityService.Modules.Identity.Models;
 using Microsoft.EntityFrameworkCore;
@@ -7,14 +8,14 @@ using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using JwtRegisteredClaimNames = System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames;
 
-namespace IdentityService.Infrastructure.Secrets;
+namespace IdentityService.Infrastructure.Authentication;
 
-internal sealed class TokenProvider(SecretsSettings secrets, DatabaseContext dbContext)
+internal sealed class TokenProvider(AppSecrets secrets, DatabaseContext dbContext)
 {
     public async Task<string> Create(User user)
     {
         // 1) Carrega a PRIVATE KEY (PEM) do SecretsSettings
-        var signingKey = BuildRsaKey(secrets.JwtPrivateKeyPem);
+        var signingKey = BuildRsaKey(secrets.JwtPrivateKey);
         var credentials = new SigningCredentials(
             signingKey,
             SecurityAlgorithms.RsaSha256
@@ -41,7 +42,7 @@ internal sealed class TokenProvider(SecretsSettings secrets, DatabaseContext dbC
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddMinutes(secrets.JwtExpiriesInMinutes),
+            Expires = DateTime.UtcNow.AddMinutes(secrets.JwtExpiresMinutes),
             SigningCredentials = credentials,
             Issuer = secrets.JwtIssuer,
             Audience = secrets.JwtAudience,

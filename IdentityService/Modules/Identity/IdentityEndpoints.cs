@@ -1,8 +1,8 @@
 using Azure;
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
+using IdentityService.Infrastructure.Authentication;
 using IdentityService.Infrastructure.Database;
-using IdentityService.Infrastructure.Secrets;
 using IdentityService.Modules.Identity.Models;
 using IdentityService.Modules.Identity.Models.Role;
 using IdentityService.Modules.Identity.UseCases;
@@ -44,24 +44,34 @@ internal static class IdentityEndpoints
 
         var exists = await context.Users.AnyAsync(u => u.Email == email.Address);
         if (exists) return TypedResults.BadRequest("Email já cadastrado.");
-        
-        await using var transaction = await context.Database.BeginTransactionAsync();
 
-        var user = new User(
-            Guid.Empty,
-            request.Name,
-            email,
-            request.Password,
-            false, 
-            passwordHasher
-        );
-        context.Users.Add(user);
-        await context.SaveChangesAsync();
+        var strategy = context.Database.CreateExecutionStrategy();
 
-        context.UserRoles.Add(new UserRole { UserId = user.Id, RoleId = Role.MemberId });
-        await context.SaveChangesAsync();
-        
-        await transaction.CommitAsync();
+        await strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await context.Database.BeginTransactionAsync();
+
+            var user = new User(
+                Guid.Empty,
+                request.Name,
+                email,
+                request.Password,
+                false,
+                passwordHasher
+            );
+
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+
+            context.UserRoles.Add(new UserRole
+            {
+                UserId = user.Id,
+                RoleId = Role.MemberId
+            });
+
+            await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+        });
 
         return TypedResults.Ok("Usuário criado");
     }
