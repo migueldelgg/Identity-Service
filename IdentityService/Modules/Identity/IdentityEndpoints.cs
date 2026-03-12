@@ -108,14 +108,9 @@ internal static class IdentityEndpoints
         return TypedResults.Ok("ok");
     }
 
-    private static async Task<Ok<KeyVaultSecret>> ResetPassword(IConfiguration configuration)
+    private static Ok ResetPassword(IConfiguration configuration)
     {
-        var secretsClient = new SecretClient(
-            new Uri(configuration["KeyVault:VaultUri"]!),
-            new DefaultAzureCredential());
-
-        Response<KeyVaultSecret> response = await secretsClient.GetSecretAsync("PostgresConnectionString");
-        return TypedResults.Ok(response.Value);
+        return TypedResults.Ok();
     }
 
     private static Ok<string> NewPassword()

@@ -14,7 +14,7 @@ internal sealed class TokenProvider(AppSecrets secrets, DatabaseContext dbContex
 {
     public async Task<string> Create(User user)
     {
-        // 1) Carrega a PRIVATE KEY (PEM) do SecretsSettings
+        // 1) Carrega a PRIVATE KEY (PEM)
         var signingKey = BuildRsaKey(secrets.JwtPrivateKey);
         var credentials = new SigningCredentials(
             signingKey,
