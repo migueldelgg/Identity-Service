@@ -1,10 +1,14 @@
 using IdentityService.Infrastructure.Authentication;
 using IdentityService.Infrastructure.Configuration.Extensions;
 using IdentityService.Infrastructure.Database;
+using IdentityService.Infrastructure.Exceptions;
 using IdentityService.Modules.Identity;
 using IdentityService.Modules.Identity.UseCases.PasswordHashing;
+using Scalar.AspNetCore; 
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddExceptionConfiguration();
 
 builder.BootstrapExternalConfiguration();
 
@@ -22,14 +26,18 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+// Documentation
+app.MapOpenApi();
+app.MapScalarApiReference("/docs");
 
+// Auth
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Endpoints
 app.MapIdentityEndpoints();
+
+// Excepiton
+app.UseExceptionHandler();
 
 app.Run();

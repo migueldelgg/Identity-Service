@@ -1,6 +1,3 @@
-using Azure;
-using Azure.Identity;
-using Azure.Security.KeyVault.Secrets;
 using IdentityService.Infrastructure.Authentication;
 using IdentityService.Infrastructure.Database;
 using IdentityService.Modules.Identity.Models;
