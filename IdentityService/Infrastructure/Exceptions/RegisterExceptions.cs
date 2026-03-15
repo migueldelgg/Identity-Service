@@ -1,6 +1,6 @@
 namespace IdentityService.Infrastructure.Exceptions;
 
-public static class ExceptionConfiguration
+public static class RegisterExceptions
 {
     
     /// <summary>
@@ -24,6 +24,8 @@ public static class ExceptionConfiguration
                 options.ProblemDetails.Extensions.TryAdd("requestId", options.HttpContext.TraceIdentifier);
             };
         });
+        services.AddExceptionHandler<ValidationExceptionHandler>();
+        services.AddExceptionHandler<UnauthorizedAccessExceptionHandler>();
         services.AddExceptionHandler<GlobalExceptionHandler>();
 
         return services;

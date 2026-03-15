@@ -1,3 +1,5 @@
+using FluentValidation;
+using FluentValidation.Results;
 using IdentityService.Infrastructure.Authentication;
 using IdentityService.Infrastructure.Database;
 using IdentityService.Modules.Identity.Models;
@@ -31,18 +33,27 @@ internal static class IdentityEndpoints
         return app;
     }
 
-    private static async Task<Results<Ok<string>, BadRequest<string>>> Register(
-        RegisterRequest request,
+    private static async Task<Results<Created, BadRequest<string>>> Register(
+        RegisterDto dto,
         DatabaseContext context,
-        IPasswordHasher passwordHasher
+        IPasswordHasher passwordHasher,
+        IValidator<RegisterDto> validator
     )
     {
-        var email = new Email(request.Email);
+        await validator.ValidateAndThrowAsync(dto);
+
+        var email = new Email(dto.Email);
 
         var exists = await context.Users.AnyAsync(u => u.Email == email.Address);
-        if (exists) return TypedResults.BadRequest("Email já cadastrado.");
+        if (exists)
+        {
+            throw new ValidationException([
+                new ValidationFailure("message", "Something wrong.")
+            ]);
+        }
 
         var strategy = context.Database.CreateExecutionStrategy();
+        var createdUserId = Guid.Empty;
 
         await strategy.ExecuteAsync(async () =>
         {
@@ -50,9 +61,9 @@ internal static class IdentityEndpoints
 
             var user = new User(
                 Guid.Empty,
-                request.Name,
+                dto.Name,
                 email,
-                request.Password,
+                dto.Password,
                 false,
                 passwordHasher
             );
@@ -68,36 +79,41 @@ internal static class IdentityEndpoints
 
             await context.SaveChangesAsync();
             await transaction.CommitAsync();
+
+            createdUserId = user.Id;
         });
 
-        return TypedResults.Ok("Usuário criado");
+        return TypedResults.Created($"/users/{createdUserId}");
     }
 
     // for more than one type of return, we need to use: Results<Ok<string>, BadRequest<string>>
-    private static async Task<Results<Ok<string>, UnauthorizedHttpResult, BadRequest<string>>> Login(
-        LoginRequest loginRequest,
+    private static async Task<Results<Ok<LoginResponseDto>, UnauthorizedHttpResult>> Login(
+        LoginDto loginDto,
         TokenProvider tokenProvider,
         DatabaseContext db,
         IPasswordHasher passwordHasher
         )
     {
-        var email = new Email(loginRequest.Email);
+        var email = new Email(loginDto.Email);
 
         // Busca do banco
         var user = await db.Users.SingleOrDefaultAsync(u => u.Email == email.Address);
         if (user is null)
-            return TypedResults.Unauthorized();
+            throw new UnauthorizedAccessException();
 
         // Valida senha
-        if (!passwordHasher.Verify(loginRequest.Password, user.PasswordHash))
-            return TypedResults.Unauthorized();
+        if (!passwordHasher.Verify(loginDto.Password, user.PasswordHash))
+            throw new UnauthorizedAccessException();
 
         // (opcional) bloquear login se não verificado
         // if (!user.IsVerified) return TypedResults.BadRequest("Email não verificado.");
 
-        var token = await tokenProvider.Create(user);
+        var response = new LoginResponseDto(
+            await tokenProvider.Create(user),
+            tokenProvider.ExpiresIn()
+        );
 
-        return TypedResults.Ok(token);
+        return TypedResults.Ok(response);
     }
 
     private static Ok<string> VerifyEmail()

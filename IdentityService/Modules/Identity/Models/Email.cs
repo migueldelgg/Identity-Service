@@ -1,4 +1,6 @@
 using System.Net.Mail;
+using FluentValidation;
+using FluentValidation.Results;
 
 namespace IdentityService.Modules.Identity.Models;
 
@@ -9,8 +11,10 @@ internal class Email
     public Email(string email)
     {
         if (!IsValidEmail(email))
-            throw new ArgumentException("E-mail inválido.", nameof(email));
-
+            throw new ValidationException([
+                new ValidationFailure("email", "Invalid email format.")
+            ]);
+        
         Address = email;
     }
 

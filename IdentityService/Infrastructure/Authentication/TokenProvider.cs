@@ -51,6 +51,8 @@ internal sealed class TokenProvider(AppSecrets secrets, DatabaseContext dbContex
         var handler = new JsonWebTokenHandler();
         return handler.CreateToken(tokenDescriptor);
     }
+
+    public int ExpiresIn() => secrets.JwtExpiresMinutes;
     
     public static RsaSecurityKey BuildRsaKey(string pemKey)
     {

@@ -1,14 +1,17 @@
+using FluentValidation;
 using IdentityService.Infrastructure.Authentication;
 using IdentityService.Infrastructure.Configuration.Extensions;
 using IdentityService.Infrastructure.Database;
 using IdentityService.Infrastructure.Exceptions;
 using IdentityService.Modules.Identity;
 using IdentityService.Modules.Identity.UseCases.PasswordHashing;
-using Scalar.AspNetCore; 
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddExceptionConfiguration();
+
+builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly, includeInternalTypes: true);
 
 builder.BootstrapExternalConfiguration();
 
